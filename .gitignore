@@ -1,5 +1,6 @@
 *.h5
 *.bin
+*.parquet
 .env
 .cache_ggshield
 data/nasdaq100/
