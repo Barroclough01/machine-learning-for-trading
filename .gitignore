@@ -2,6 +2,7 @@
 *.bin
 *.parquet
 *.csv
+*.log
 .env
 .cache_ggshield
 data/nasdaq100/
