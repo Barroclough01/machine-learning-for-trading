@@ -114,6 +114,8 @@ options.add_argument('--disable-infobars')
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument('--disable-browser-side-navigation')
 options.add_argument('--disable-gpu')
+options.add_argument('--enable-logging')
+options.add_argument('--v=1')  # Verbosity level
 
 # Create the driver
 driver = uc.Chrome(options=options)
@@ -186,6 +188,13 @@ def get_restaurant_key(item):
     """Create a unique key for each restaurant based on name and location"""
     return f"{item['name']}_{item['location']}"
 
+# Function to check for JavaScript errors in the console
+def check_for_js_errors(driver):
+    logs = driver.get_log('browser')  # Get browser logs
+    for entry in logs:
+        if 'SEVERE' in entry['level']:
+            print(f"JavaScript Error: {entry['message']}")
+
 try:
     url = "https://www.opentable.com/new-york-restaurant-listings"
     driver.get(url)
@@ -247,17 +256,13 @@ try:
         
         # Try to go to next page
         try:
-            # Find the next button more reliably
-            next_buttons = driver.find_elements(By.CSS_SELECTOR, "button")
-            next_button = None
-            for button in next_buttons:
-                if "Next" in button.get_attribute('innerHTML'):
-                    next_button = button
-                    break
-            
-            if not next_button:
-                print("No next button found - reached last page")
-                break
+            # Scroll to the bottom of the page to ensure the "Next" button is visible
+            scroll_page_fully(driver)
+
+            # Use XPath to find the "Next" button
+            next_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//a[@aria-label='Go to the next page']"))
+            )
             
             if 'disabled' in next_button.get_attribute('class'):
                 print("Next button is disabled - reached last page")
@@ -265,15 +270,22 @@ try:
             
             # Scroll to and click the next button
             driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", next_button)
-            sleep(3)
+            sleep(2)
             
             # Click using JavaScript for better reliability
             driver.execute_script("arguments[0].click();", next_button)
             
-            # Wait for new content
-            sleep(5)
-            
-            # Verify page changed by checking URL or content
+            # Wait for new content to load
+            sleep(10)  # Increased wait time
+
+            # Check for JavaScript errors after clicking
+            check_for_js_errors(driver)
+
+            # Verify page changed by checking the URL
+            current_url = driver.current_url
+            print(f"Current URL after clicking next: {current_url}")
+
+            # Verify new content loaded
             old_first_restaurant = driver.find_element(By.TAG_NAME, "h6").text
             max_attempts = 5
             attempts = 0
@@ -282,6 +294,7 @@ try:
                 sleep(2)
                 new_first_restaurant = driver.find_element(By.TAG_NAME, "h6").text
                 if new_first_restaurant != old_first_restaurant:
+                    print("New content loaded successfully.")
                     break
                 attempts += 1
                 print(f"Waiting for new content... attempt {attempts}")
@@ -290,8 +303,18 @@ try:
                 print("Failed to load new content after clicking next")
                 break
         
+        except TimeoutException:
+            print("TimeoutException: Next button not found or not clickable.")
+            # Print available elements for debugging
+            elements = driver.find_elements(By.XPATH, "//*")
+            print("Available elements on the page:")
+            for element in elements:
+                print(element.tag_name, element.text)
         except Exception as e:
             print(f"Error navigating to next page: {str(e)}")
+            import traceback
+            print("Traceback:")
+            print(traceback.format_exc())
             break
             
 except Exception as e:

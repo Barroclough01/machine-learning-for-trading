@@ -12,7 +12,7 @@ DOWNLOADER_MIDDLEWARES = {
     'scrapy_splash.SplashMiddleware'                                        : 725,
     'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
     # 'scrapy.downloadermiddleware.useragent.UserAgentMiddleware'             : None,
-    'random_useragent.RandomUserAgentMiddleware'                            : 400
+    'scrapy_user_agents.middlewares.RandomUserAgentMiddleware'                            : 400
 }
 
 SPIDER_MIDDLEWARES = {
