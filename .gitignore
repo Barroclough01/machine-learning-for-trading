@@ -6,6 +6,7 @@
 *.npy
 *.pickle
 .env
+*.pyc
 .cache_ggshield
 data/nasdaq100
 02_market_and_fundamental_data/04_sec_edgar/data
