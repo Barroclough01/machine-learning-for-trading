@@ -106,3 +106,9 @@ def get_ohlcv_by_ticker():
         data.reset_index('ticker', drop=True).to_hdf('algoseek.h5', '{}'.format(symbol_dict[symbol]))
 
     equities.drop('quandl_sid', axis=1).to_hdf('algoseek.h5', 'equities')
+
+
+get_equities()
+get_dividends()
+get_ohlcv_by_ticker()
+get_splits()

@@ -10,7 +10,7 @@ from scipy.stats import spearmanr
 pd.set_option('display.expand_frame_repr', False)
 np.random.seed(42)
 
-PROJECT_DIR = Path('..', '..')
+PROJECT_DIR = Path('C:/Users/paxto/machine-learning-for-trading')
 
 DATA_DIR = PROJECT_DIR / 'data'
 

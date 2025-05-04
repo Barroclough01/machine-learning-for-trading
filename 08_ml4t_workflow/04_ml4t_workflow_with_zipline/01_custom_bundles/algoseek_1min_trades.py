@@ -88,3 +88,7 @@ def algoseek_to_bundle(interval='1m'):
         # adjustment_writer.write(dividends=pd.read_hdf(custom_data_path / 'algoseek.h5', 'dividends'))
 
     return ingest
+
+
+out = algoseek_to_bundle()
+print(out)
