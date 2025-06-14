@@ -37,17 +37,21 @@ def ticker_generator():
 
 
 def data_generator():
-    for sid, symbol, asset_name in ticker_generator():
-        df = pd.read_hdf(custom_data_path / 'stooq.h5', 'jp/{}'.format(sid))
+    with pd.HDFStore('C:/Users/paxto/machine-learning-for-trading/11_decision_trees_random_forests/00_custom_bundle/stooq.h5', 'r') as store:
+        
+        keys = [key.split('/')[2] for key in store.keys()]
+        
+        for key in keys:
+            df = pd.read_hdf(custom_data_path / 'stooq.h5', 'jp/{}'.format(key))
 
-        start_date = df.index[0]
-        end_date = df.index[-1]
+            start_date = df.index[0]
+            end_date = df.index[-1]
 
-        first_traded = start_date.date()
-        auto_close_date = end_date + pd.Timedelta(days=1)
-        exchange = 'XTKS'
+            first_traded = start_date.date()
+            auto_close_date = end_date + pd.Timedelta(days=1)
+            exchange = 'XTKS'
 
-        yield (sid, df), symbol, asset_name, start_date, end_date, first_traded, auto_close_date, exchange
+            yield (key, df), start_date, end_date, first_traded, auto_close_date, exchange
 
 
 def metadata_frame():

@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-sys.path.append(Path('~', '.zipline').expanduser().as_posix())
+sys.path.append('C:\\Users\\paxto\\.zipline')
 from zipline.data.bundles import register
 from stooq_jp_stocks import stooq_jp_to_bundle
 from datetime import time

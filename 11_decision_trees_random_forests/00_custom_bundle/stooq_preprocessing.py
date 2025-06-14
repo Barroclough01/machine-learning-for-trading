@@ -8,7 +8,7 @@ import pandas as pd
 
 warnings.filterwarnings('ignore')
 
-DATA_DIR = Path('..', '..', 'data')
+DATA_DIR = Path('C:\\Users\\paxto\\machine-learning-for-trading\\data')
 idx = pd.IndexSlice
 
 
@@ -41,22 +41,20 @@ def load_symbols(tickers):
 
 if __name__ == '__main__':
     prices = load_prices()
-    print(prices.info(null_counts=True))
+    print(prices.info(show_counts=True))
     tickers = prices.index.unique('ticker')
-
-    symbols = load_symbols(tickers)
-    print(symbols.info(null_counts=True))
-    symbols.to_hdf('stooq.h5', 'jp/equities', format='t')
+    
+    # symbols = load_symbols(tickers)
+    # print(symbols.info(show_counts=True))
+    # symbols.to_hdf('stooq.h5', 'jp/equities', format='t')
 
     dates = prices.index.unique('date')
     start_date = dates.min()
     end_date = dates.max()
 
-    for sid, symbol in symbols.set_index('sid').symbol.items():
-        p = prices.loc[symbol]
-        p.to_hdf('stooq.h5', 'jp/{}'.format(sid), format='t')
-
-    with pd.HDFStore('stooq.h5') as store:
-        print(store.info())
+    for ticker in tickers:
+        p = prices.loc[ticker]
+        ticker = ticker.split('.')[0]
+        p.to_hdf('stooq.h5', 'jp/{}'.format(ticker), format='t')
 
     create_split_table()
