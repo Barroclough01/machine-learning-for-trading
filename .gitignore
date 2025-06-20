@@ -11,6 +11,7 @@
 *.joblib
 *.png
 *.txt
+*.npz
 .cache_ggshield
 data/**
 02_market_and_fundamental_data/04_sec_edgar/data
