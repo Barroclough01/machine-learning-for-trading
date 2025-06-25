@@ -12,7 +12,10 @@
 *.png
 *.txt
 *.npz
+*.pkl
+*.html
 .cache_ggshield
 data/**
 02_market_and_fundamental_data/04_sec_edgar/data
 12_gradient_boosting_machines/catboost_info
+15_topic_modeling/results/financial_news
