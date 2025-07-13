@@ -37,7 +37,7 @@ import talib
 logging.basicConfig()
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
-log.info('%s logger started.', __name__)
+log.info("%s logger started.", __name__)
 
 
 class DataSource:
@@ -57,7 +57,7 @@ class DataSource:
 
     """
 
-    def __init__(self, trading_days=252, ticker='AAPL', normalize=True):
+    def __init__(self, trading_days=252, ticker="AAPL", normalize=True):
         self.ticker = ticker
         self.trading_days = trading_days
         self.normalize = normalize
@@ -69,46 +69,54 @@ class DataSource:
         self.offset = None
 
     def load_data(self):
-        log.info('loading data for {}...'.format(self.ticker))
+        log.info("loading data for {}...".format(self.ticker))
         idx = pd.IndexSlice
-        with pd.HDFStore('../data/assets.h5') as store:
-            df = (store['quandl/wiki/prices']
-                  .loc[idx[:, self.ticker],
-                       ['adj_close', 'adj_volume', 'adj_low', 'adj_high']]
-                  .dropna()
-                  .sort_index())
-        df.columns = ['close', 'volume', 'low', 'high']
-        log.info('got data for {}...'.format(self.ticker))
+        with pd.HDFStore("../data/assets.h5") as store:
+            df = (
+                store["quandl/wiki/prices"]
+                .loc[
+                    idx[:, self.ticker],
+                    ["adj_close", "adj_volume", "adj_low", "adj_high"],
+                ]
+                .dropna()
+                .sort_index()
+            )
+        df.columns = ["close", "volume", "low", "high"]
+        log.info("got data for {}...".format(self.ticker))
         return df
 
     def preprocess_data(self):
         """calculate returns and percentiles, then removes missing values"""
 
-        self.data['returns'] = self.data.close.pct_change()
-        self.data['ret_2'] = self.data.close.pct_change(2)
-        self.data['ret_5'] = self.data.close.pct_change(5)
-        self.data['ret_10'] = self.data.close.pct_change(10)
-        self.data['ret_21'] = self.data.close.pct_change(21)
-        self.data['rsi'] = talib.STOCHRSI(self.data.close)[1]
-        self.data['macd'] = talib.MACD(self.data.close)[1]
-        self.data['atr'] = talib.ATR(self.data.high, self.data.low, self.data.close)
+        self.data["returns"] = self.data.close.pct_change()
+        self.data["ret_2"] = self.data.close.pct_change(2)
+        self.data["ret_5"] = self.data.close.pct_change(5)
+        self.data["ret_10"] = self.data.close.pct_change(10)
+        self.data["ret_21"] = self.data.close.pct_change(21)
+        self.data["rsi"] = talib.STOCHRSI(self.data.close)[1]
+        self.data["macd"] = talib.MACD(self.data.close)[1]
+        self.data["atr"] = talib.ATR(self.data.high, self.data.low, self.data.close)
 
         slowk, slowd = talib.STOCH(self.data.high, self.data.low, self.data.close)
-        self.data['stoch'] = slowd - slowk
-        self.data['atr'] = talib.ATR(self.data.high, self.data.low, self.data.close)
-        self.data['ultosc'] = talib.ULTOSC(self.data.high, self.data.low, self.data.close)
-        self.data = (self.data.replace((np.inf, -np.inf), np.nan)
-                     .drop(['high', 'low', 'close', 'volume'], axis=1)
-                     .dropna())
+        self.data["stoch"] = slowd - slowk
+        self.data["atr"] = talib.ATR(self.data.high, self.data.low, self.data.close)
+        self.data["ultosc"] = talib.ULTOSC(
+            self.data.high, self.data.low, self.data.close
+        )
+        self.data = (
+            self.data.replace((np.inf, -np.inf), np.nan)
+            .drop(["high", "low", "close", "volume"], axis=1)
+            .dropna()
+        )
 
         r = self.data.returns.copy()
         if self.normalize:
-            self.data = pd.DataFrame(scale(self.data),
-                                     columns=self.data.columns,
-                                     index=self.data.index)
-        features = self.data.columns.drop('returns')
-        self.data['returns'] = r  # don't scale returns
-        self.data = self.data.loc[:, ['returns'] + list(features)]
+            self.data = pd.DataFrame(
+                scale(self.data), columns=self.data.columns, index=self.data.index
+            )
+        features = self.data.columns.drop("returns")
+        self.data["returns"] = r  # don't scale returns
+        self.data = self.data.loc[:, ["returns"] + list(features)]
         log.info(self.data.info())
 
     def reset(self):
@@ -126,7 +134,7 @@ class DataSource:
 
 
 class TradingSimulator:
-    """ Implements core trading simulator for single-instrument univ """
+    """Implements core trading simulator for single-instrument univ"""
 
     def __init__(self, steps, trading_cost_bps, time_cost_bps):
         # invariant for object life
@@ -157,9 +165,9 @@ class TradingSimulator:
         self.market_returns.fill(0)
 
     def take_step(self, action, market_return):
-        """ Calculates NAVs, trading costs and reward
-            based on an action and latest market return
-            and returns the reward and a summary of the day's activity. """
+        """Calculates NAVs, trading costs and reward
+        based on an action and latest market return
+        and returns the reward and a summary of the day's activity."""
 
         start_position = self.positions[max(0, self.step - 1)]
         start_nav = self.navs[max(0, self.step - 1)]
@@ -176,30 +184,38 @@ class TradingSimulator:
         trade_costs = abs(n_trades) * self.trading_cost_bps
         time_cost = 0 if n_trades else self.time_cost_bps
         self.costs[self.step] = trade_costs + time_cost
-        reward = start_position * market_return - self.costs[max(0, self.step-1)]
+        reward = start_position * market_return - self.costs[max(0, self.step - 1)]
         self.strategy_returns[self.step] = reward
 
         if self.step != 0:
             self.navs[self.step] = start_nav * (1 + self.strategy_returns[self.step])
-            self.market_navs[self.step] = start_market_nav * (1 + self.market_returns[self.step])
+            self.market_navs[self.step] = start_market_nav * (
+                1 + self.market_returns[self.step]
+            )
 
-        info = {'reward': reward,
-                'nav'   : self.navs[self.step],
-                'costs' : self.costs[self.step]}
+        info = {
+            "reward": reward,
+            "nav": self.navs[self.step],
+            "costs": self.costs[self.step],
+        }
 
         self.step += 1
         return reward, info
 
     def result(self):
-        """returns current state as pd.DataFrame """
-        return pd.DataFrame({'action'         : self.actions,  # current action
-                             'nav'            : self.navs,  # starting Net Asset Value (NAV)
-                             'market_nav'     : self.market_navs,
-                             'market_return'  : self.market_returns,
-                             'strategy_return': self.strategy_returns,
-                             'position'       : self.positions,  # eod position
-                             'cost'           : self.costs,  # eod costs
-                             'trade'          : self.trades})  # eod trade)
+        """returns current state as pd.DataFrame"""
+        return pd.DataFrame(
+            {
+                "action": self.actions,  # current action
+                "nav": self.navs,  # starting Net Asset Value (NAV)
+                "market_nav": self.market_navs,
+                "market_return": self.market_returns,
+                "strategy_return": self.strategy_returns,
+                "position": self.positions,  # eod position
+                "cost": self.costs,  # eod costs
+                "trade": self.trades,
+            }
+        )  # eod trade)
 
 
 class TradingEnvironment(gym.Env):
@@ -222,25 +238,26 @@ class TradingEnvironment(gym.Env):
 
     The trading simulator tracks a buy-and-hold strategy as benchmark.
     """
-    metadata = {'render.modes': ['human']}
 
-    def __init__(self,
-                 trading_days=252,
-                 trading_cost_bps=1e-3,
-                 time_cost_bps=1e-4,
-                 ticker='AAPL'):
+    metadata = {"render.modes": ["human"]}
+
+    def __init__(
+        self, trading_days=252, trading_cost_bps=1e-3, time_cost_bps=1e-4, ticker="AAPL"
+    ):
         self.trading_days = trading_days
         self.trading_cost_bps = trading_cost_bps
         self.ticker = ticker
         self.time_cost_bps = time_cost_bps
-        self.data_source = DataSource(trading_days=self.trading_days,
-                                      ticker=ticker)
-        self.simulator = TradingSimulator(steps=self.trading_days,
-                                          trading_cost_bps=self.trading_cost_bps,
-                                          time_cost_bps=self.time_cost_bps)
+        self.data_source = DataSource(trading_days=self.trading_days, ticker=ticker)
+        self.simulator = TradingSimulator(
+            steps=self.trading_days,
+            trading_cost_bps=self.trading_cost_bps,
+            time_cost_bps=self.time_cost_bps,
+        )
         self.action_space = spaces.Discrete(3)
-        self.observation_space = spaces.Box(self.data_source.min_values,
-                                            self.data_source.max_values)
+        self.observation_space = spaces.Box(
+            self.data_source.min_values, self.data_source.max_values
+        )
         self.reset()
 
     def seed(self, seed=None):
@@ -249,10 +266,13 @@ class TradingEnvironment(gym.Env):
 
     def step(self, action):
         """Returns state observation, reward, done and info"""
-        assert self.action_space.contains(action), '{} {} invalid'.format(action, type(action))
+        assert self.action_space.contains(action), "{} {} invalid".format(
+            action, type(action)
+        )
         observation, done = self.data_source.take_step()
-        reward, info = self.simulator.take_step(action=action,
-                                                market_return=observation[0])
+        reward, info = self.simulator.take_step(
+            action=action, market_return=observation[0]
+        )
         return observation, reward, done, info
 
     def reset(self):
@@ -262,6 +282,6 @@ class TradingEnvironment(gym.Env):
         return self.data_source.take_step()[0]
 
     # TODO
-    def render(self, mode='human'):
+    def render(self, mode="human"):
         """Not implemented"""
         pass

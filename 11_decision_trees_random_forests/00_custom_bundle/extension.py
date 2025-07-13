@@ -1,16 +1,15 @@
 import sys
 from pathlib import Path
 
-sys.path.append('C:\\Users\\paxto\\.zipline')
+sys.path.append("C:\\Users\\paxto\\.zipline")
 from zipline.data.bundles import register
 from stooq_jp_stocks import stooq_jp_to_bundle
 from datetime import time
 from pytz import timezone
 
 
-register('stooq',
-         stooq_jp_to_bundle(),
-         calendar_name='XTKS',
-         )
-
-
+register(
+    "stooq",
+    stooq_jp_to_bundle(),
+    calendar_name="XTKS",
+)

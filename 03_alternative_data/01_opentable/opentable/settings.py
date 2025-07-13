@@ -1,28 +1,28 @@
 # -*- coding: utf-8 -*-
 
-BOT_NAME = 'opentable'
+BOT_NAME = "opentable"
 
-SPIDER_MODULES = ['opentable.spiders']
-NEWSPIDER_MODULE = 'opentable.spiders'
+SPIDER_MODULES = ["opentable.spiders"]
+NEWSPIDER_MODULE = "opentable.spiders"
 
-SPLASH_URL = 'http://localhost:8050/'
+SPLASH_URL = "http://localhost:8050/"
 
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy_splash.SplashCookiesMiddleware'                                 : 723,
-    'scrapy_splash.SplashMiddleware'                                        : 725,
-    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
+    "scrapy_splash.SplashCookiesMiddleware": 723,
+    "scrapy_splash.SplashMiddleware": 725,
+    "scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware": 810,
     # 'scrapy.downloadermiddleware.useragent.UserAgentMiddleware'             : None,
-    'scrapy_user_agents.middlewares.RandomUserAgentMiddleware'                            : 400
+    "scrapy_user_agents.middlewares.RandomUserAgentMiddleware": 400,
 }
 
 SPIDER_MIDDLEWARES = {
-    'opentable.middlewares.OpentableSpiderMiddleware': 543,
-    'scrapy_splash.SplashDeduplicateArgsMiddleware'  : 100,
+    "opentable.middlewares.OpentableSpiderMiddleware": 543,
+    "scrapy_splash.SplashDeduplicateArgsMiddleware": 100,
 }
 
-DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
+DUPEFILTER_CLASS = "scrapy_splash.SplashAwareDupeFilter"
 
-HTTPCACHE_STORAGE = 'scrapy_splash.SplashAwareFSCacheStorage'
+HTTPCACHE_STORAGE = "scrapy_splash.SplashAwareFSCacheStorage"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -90,7 +90,7 @@ AUTOTHROTTLE_DEBUG = True
 #     'scrapy.extensions.logstats.LogStats'           : 500,
 # }
 
-LOG_LEVEL = 'DEBUG'
-LOG_FILE = 'spider.log'
+LOG_LEVEL = "DEBUG"
+LOG_FILE = "spider.log"
 
 USER_AGENT_LIST = "opentable/user_agents.txt"

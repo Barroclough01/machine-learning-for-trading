@@ -1,32 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-__author__ = 'Stefan Jansen'
+__author__ = "Stefan Jansen"
 
 from pathlib import Path
 import os
 import numpy as np
 import pandas as pd
 
-pd.set_option('display.expand_frame_repr', False)
+pd.set_option("display.expand_frame_repr", False)
 np.random.seed(42)
 
 
 zipline_root = None
 
 try:
-    zipline_root = os.environ['ZIPLINE_ROOT']
+    zipline_root = os.environ["ZIPLINE_ROOT"]
 except KeyError:
-    print('Please ensure a ZIPLINE_ROOT environment variable is defined and accessible '
-          '(or alter the script and manually set the path')
+    print(
+        "Please ensure a ZIPLINE_ROOT environment variable is defined and accessible "
+        "(or alter the script and manually set the path"
+    )
     exit()
 
-custom_data_path = Path(zipline_root, 'custom_data')
+custom_data_path = Path(zipline_root, "custom_data")
 
 # custom_data_path = Path('~/.zipline/custom_data').expanduser()
 
 
 def load_equities():
-    return pd.read_hdf(custom_data_path / 'stooq.h5', 'jp/equities')
+    return pd.read_hdf(custom_data_path / "stooq.h5", "jp/equities")
 
 
 def ticker_generator():
@@ -37,48 +39,59 @@ def ticker_generator():
 
 
 def data_generator():
-    with pd.HDFStore('C:/Users/paxto/machine-learning-for-trading/11_decision_trees_random_forests/00_custom_bundle/stooq.h5', 'r') as store:
-        
-        keys = [key.split('/')[2] for key in store.keys()]
-        
+    with pd.HDFStore(
+        "C:/Users/paxto/machine-learning-for-trading/11_decision_trees_random_forests/00_custom_bundle/stooq.h5",
+        "r",
+    ) as store:
+        keys = [key.split("/")[2] for key in store.keys()]
+
         for key in keys:
-            df = pd.read_hdf(custom_data_path / 'stooq.h5', 'jp/{}'.format(key))
+            df = pd.read_hdf(custom_data_path / "stooq.h5", "jp/{}".format(key))
 
             start_date = df.index[0]
             end_date = df.index[-1]
 
             first_traded = start_date.date()
             auto_close_date = end_date + pd.Timedelta(days=1)
-            exchange = 'XTKS'
+            exchange = "XTKS"
 
-            yield (key, df), start_date, end_date, first_traded, auto_close_date, exchange
+            yield (
+                (key, df),
+                start_date,
+                end_date,
+                first_traded,
+                auto_close_date,
+                exchange,
+            )
 
 
 def metadata_frame():
     dtype = [
-        ('symbol', 'object'),
-        ('asset_name', 'object'),
-        ('start_date', 'datetime64[ns]'),
-        ('end_date', 'datetime64[ns]'),
-        ('first_traded', 'datetime64[ns]'),
-        ('auto_close_date', 'datetime64[ns]'),
-        ('exchange', 'object'), ]
+        ("symbol", "object"),
+        ("asset_name", "object"),
+        ("start_date", "datetime64[ns]"),
+        ("end_date", "datetime64[ns]"),
+        ("first_traded", "datetime64[ns]"),
+        ("auto_close_date", "datetime64[ns]"),
+        ("exchange", "object"),
+    ]
     return pd.DataFrame(np.empty(len(load_equities()), dtype=dtype))
 
 
-def stooq_jp_to_bundle(interval='1d'):
-    def ingest(environ,
-               asset_db_writer,
-               minute_bar_writer,
-               daily_bar_writer,
-               adjustment_writer,
-               calendar,
-               start_session,
-               end_session,
-               cache,
-               show_progress,
-               output_dir
-               ):
+def stooq_jp_to_bundle(interval="1d"):
+    def ingest(
+        environ,
+        asset_db_writer,
+        minute_bar_writer,
+        daily_bar_writer,
+        adjustment_writer,
+        calendar,
+        start_session,
+        end_session,
+        cache,
+        show_progress,
+        output_dir,
+    ):
         metadata = metadata_frame()
 
         def daily_data_generator():
@@ -89,6 +102,8 @@ def stooq_jp_to_bundle(interval='1d'):
         metadata.dropna(inplace=True)
         asset_db_writer.write(equities=metadata)
         # empty DataFrame
-        adjustment_writer.write(splits=pd.read_hdf(custom_data_path / 'stooq.h5', 'jp/splits'))
+        adjustment_writer.write(
+            splits=pd.read_hdf(custom_data_path / "stooq.h5", "jp/splits")
+        )
 
     return ingest

@@ -1,60 +1,70 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-__author__ = 'Stefan Jansen'
+__author__ = "Stefan Jansen"
 
 from pathlib import Path
 import warnings
 import pandas as pd
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
-DATA_DIR = Path('C:\\Users\\paxto\\machine-learning-for-trading\\data')
+DATA_DIR = Path("C:\\Users\\paxto\\machine-learning-for-trading\\data")
 idx = pd.IndexSlice
 
 
 def create_split_table():
-    with pd.HDFStore('stooq.h5') as store:
-        store.put('jp/splits', pd.DataFrame(columns=['sid', 'effective_date', 'ratio'],
-                                            data=[[1, pd.to_datetime('2010-01-01'), 1.0]]), format='t')
+    with pd.HDFStore("stooq.h5") as store:
+        store.put(
+            "jp/splits",
+            pd.DataFrame(
+                columns=["sid", "effective_date", "ratio"],
+                data=[[1, pd.to_datetime("2010-01-01"), 1.0]],
+            ),
+            format="t",
+        )
 
 
 def load_prices():
-    df = pd.read_hdf(DATA_DIR / 'assets.h5', 'stooq/jp/tse/stocks/prices')
+    df = pd.read_hdf(DATA_DIR / "assets.h5", "stooq/jp/tse/stocks/prices")
 
-    return (df.loc[idx[:, '2014': '2019'], :]
-            .unstack('ticker')
-            .sort_index()
-            .tz_localize('UTC')
-            .ffill(limit=5)
-            .dropna(axis=1)
-            .stack('ticker')
-            .swaplevel())
+    return (
+        df.loc[idx[:, "2014":"2019"], :]
+        .unstack("ticker")
+        .sort_index()
+        .tz_localize("UTC")
+        .ffill(limit=5)
+        .dropna(axis=1)
+        .stack("ticker")
+        .swaplevel()
+    )
 
 
 def load_symbols(tickers):
-    df = pd.read_hdf(DATA_DIR / 'assets.h5', 'stooq/jp/tse/stocks/tickers')
-    return (df[df.ticker.isin(tickers)]
-            .reset_index(drop=True)
-            .reset_index()
-            .rename(columns={'index': 'sid'}))
+    df = pd.read_hdf(DATA_DIR / "assets.h5", "stooq/jp/tse/stocks/tickers")
+    return (
+        df[df.ticker.isin(tickers)]
+        .reset_index(drop=True)
+        .reset_index()
+        .rename(columns={"index": "sid"})
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     prices = load_prices()
     print(prices.info(show_counts=True))
-    tickers = prices.index.unique('ticker')
-    
+    tickers = prices.index.unique("ticker")
+
     # symbols = load_symbols(tickers)
     # print(symbols.info(show_counts=True))
     # symbols.to_hdf('stooq.h5', 'jp/equities', format='t')
 
-    dates = prices.index.unique('date')
+    dates = prices.index.unique("date")
     start_date = dates.min()
     end_date = dates.max()
 
     for ticker in tickers:
         p = prices.loc[ticker]
-        ticker = ticker.split('.')[0]
-        p.to_hdf('stooq.h5', 'jp/{}'.format(ticker), format='t')
+        ticker = ticker.split(".")[0]
+        p.to_hdf("stooq.h5", "jp/{}".format(ticker), format="t")
 
     create_split_table()

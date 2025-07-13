@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-__author__ = 'Stefan Jansen'
+__author__ = "Stefan Jansen"
 
 import os, sys
 
