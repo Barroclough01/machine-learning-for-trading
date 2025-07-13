@@ -1,4 +1,6 @@
 {
     "python.analysis.typeCheckingMode": "off",
-    "python.analysis.autoImportCompletions": false
+    "python.analysis.autoImportCompletions": false,
+    "cursorpyright.analysis.autoImportCompletions": false,
+    "cursorpyright.analysis.typeCheckingMode": "off"
 }
