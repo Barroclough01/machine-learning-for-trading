@@ -3,5 +3,5 @@
     "python.analysis.autoImportCompletions": false,
     "cursorpyright.analysis.autoImportCompletions": false,
     "cursorpyright.analysis.typeCheckingMode": "off",
-    "python.languageServer": "Jedi"
+    "python.languageServer": "None"
 }

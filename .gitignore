@@ -12,6 +12,7 @@
 *.png
 *.txt
 *.npz
+*.pdf
 *.pkl
 *.html
 .cache_ggshield
@@ -22,3 +23,4 @@ data/**
 16_word_embeddings/results
 17_deep_learning/results
 18_convolutional_neural_nets/results
+18_convolutional_neural_nets/cats_vs_dogs
