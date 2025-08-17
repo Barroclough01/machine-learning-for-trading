@@ -1,7 +1,8 @@
 {
-    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": false,
     "cursorpyright.analysis.autoImportCompletions": false,
     "cursorpyright.analysis.typeCheckingMode": "off",
-    "python.languageServer": "None"
+    "python.languageServer": "Pylance",
+    "python.analysis.completeFunctionParens": true
 }
