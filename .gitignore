@@ -28,3 +28,4 @@ data/**
 19_recurrent_neural_nets/data
 19_recurrent_neural_nets/results
 20_autoencoders_for_conditional_risk_factors/results
+21_gans_for_synthetic_time_Series/dcgan
