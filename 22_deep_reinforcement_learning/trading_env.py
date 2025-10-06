@@ -24,20 +24,31 @@ SOFTWARE.
 """
 
 import logging
-import tempfile
 
-import gym
+try:
+    import gymnasium as gym
+    from gymnasium import spaces
+    from gymnasium.utils import seeding
+
+    USE_GYMNASIUM = True
+except Exception:
+    # fall back to older gym if gymnasium is not installed
+    import gym
+    from gym import spaces
+    from gym.utils import seeding
+
+    USE_GYMNASIUM = False
+
 import numpy as np
 import pandas as pd
-from gym import spaces
-from gym.utils import seeding
 from sklearn.preprocessing import scale
-import talib
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
-log.info("%s logger started.", __name__)
+# Reduce default verbosity for the environment module so it doesn't
+# flood notebooks with info-level messages during training.
+log.setLevel(logging.WARNING)
+log.debug("%s logger started.", __name__)
 
 
 class DataSource:
@@ -87,6 +98,12 @@ class DataSource:
 
     def preprocess_data(self):
         """calculate returns and percentiles, then removes missing values"""
+
+        # lazy import TA-Lib because it may be a binary extension compiled
+        # against a different numpy ABI; importing at module import time
+        # causes the process to fail (see ValueError in notebook). Import
+        # here and raise a clear error if it fails so callers know how to fix it.
+        import talib
 
         self.data["returns"] = self.data.close.pct_change()
         self.data["ret_2"] = self.data.close.pct_change(2)
@@ -239,7 +256,8 @@ class TradingEnvironment(gym.Env):
     The trading simulator tracks a buy-and-hold strategy as benchmark.
     """
 
-    metadata = {"render.modes": ["human"]}
+    # provide both keys for compatibility with gym and gymnasium
+    metadata = {"render_modes": ["human"], "render.modes": ["human"]}
 
     def __init__(
         self, trading_days=252, trading_cost_bps=1e-3, time_cost_bps=1e-4, ticker="AAPL"
@@ -255,31 +273,65 @@ class TradingEnvironment(gym.Env):
             time_cost_bps=self.time_cost_bps,
         )
         self.action_space = spaces.Discrete(3)
-        self.observation_space = spaces.Box(
-            self.data_source.min_values, self.data_source.max_values
-        )
+        # ensure numpy arrays and explicit dtype for gymnasium Box
+        low = np.array(self.data_source.min_values, dtype=np.float32)
+        high = np.array(self.data_source.max_values, dtype=np.float32)
+        self.observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.reset()
 
+    # gymnasium recommends seeding via reset; keep legacy seed for compatibility
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
     def step(self, action):
-        """Returns state observation, reward, done and info"""
+        """Returns state observation, reward, terminated, truncated and info
+
+        Compatible with gymnasium: (obs, reward, terminated, truncated, info)
+        """
         assert self.action_space.contains(action), "{} {} invalid".format(
             action, type(action)
         )
         observation, done = self.data_source.take_step()
+        # ensure observation dtype
+        observation = np.array(observation, dtype=np.float32)
         reward, info = self.simulator.take_step(
             action=action, market_return=observation[0]
         )
-        return observation, reward, done, info
 
-    def reset(self):
-        """Resets DataSource and TradingSimulator; returns first observation"""
+        # terminated: environment reached a terminal condition (win/lose)
+        nav = info.get("nav")
+        terminated = False
+        if nav is not None:
+            if nav <= 0 or nav >= 2.0:
+                terminated = True
+
+        # truncated: episode ended due to time limit / data exhaustion
+        truncated = bool(done)
+
+        if USE_GYMNASIUM:
+            return observation, reward, terminated, truncated, info
+        else:
+            # older gym expects (obs, reward, done, info)
+            done_flag = terminated or truncated
+            return observation, reward, done_flag, info
+
+    def reset(self, *, seed=None, options=None):
+        """Resets DataSource and TradingSimulator; returns (first_observation, info)
+
+        Accepts a seed per gymnasium API.
+        """
+        # initialize RNG
+        self.np_random, _ = seeding.np_random(seed)
+
         self.data_source.reset()
         self.simulator.reset()
-        return self.data_source.take_step()[0]
+        observation, _ = self.data_source.take_step()
+        observation = np.array(observation, dtype=np.float32)
+        if USE_GYMNASIUM:
+            return observation, {}
+        else:
+            return observation
 
     # TODO
     def render(self, mode="human"):
